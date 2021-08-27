@@ -1,11 +1,13 @@
-#include "isr.h"
-#include "idt.h"
-#include "../drivers/screen.h"
-#include "ports.h"
-#include "../kernel/util.h"
-#include "../libc/string.h"
-#include "../drivers/keyboard.h"
-#include "timer.h"
+#include "cpu/isr.h"
+#include "cpu/idt.h"
+#include "drivers/screen.h"
+#include "cpu/ports.h"
+#include "kernel/util.h"
+#include "libc/string.h"
+#include "libc/stdlib.h"
+#include "drivers/keyboard.h"
+#include "drivers/serial.h"
+#include "cpu/timer.h"
 
 isr_t interrupt_handlers[256];
 
@@ -138,12 +140,40 @@ void irq_handler(registers_t *r)
 		isr_t handler = interrupt_handlers[r->int_no];
 		handler(r);
 	}
+	else
+	{
+		kprint("irq");
+		char str[16];
+		itoa(r->int_no, str, 10);
+		kprint(str);
+		kprint(" does not exist.\n");
+	}
 }
 
 void irq_install()
 {
+	int result = 0;
 	asm volatile("sti");
 	init_timer(50);
-	init_keyboard();
+	result = init_keyboard();
+	if (result > 0)
+	{
+		// Failed to initalize keyboard
+		kprint("Failed to initalize keyboard\n");
+	}
+	else
+	{
+		kprint("Initalized keyboard\n");
+	}
+	result = init_serial();
+	if (result > 0)
+	{
+		// Failed to initalize COM1
+		kprint("Failed to initalize serial port: COM1\n");
+	}
+	else
+	{
+		kprint("Initalized serial port: COM1\n");
+	}
 }
 

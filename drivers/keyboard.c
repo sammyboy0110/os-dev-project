@@ -1,13 +1,15 @@
-#include "keyboard.h"
-#include "../kernel/util.h"
-#include "../kernel/kernel.h"
-#include "../libc/string.h"
-#include "../libc/function.h"
-#include "../cpu/ports.h"
-#include "../cpu/isr.h"
-#include "screen.h"
-#include "../libc/stddef.h"
-#include "../libc/mem.h"
+#include "drivers/keyboard.h"
+#include "kernel/util.h"
+#include "kernel/kernel.h"
+#include "libc/string.h"
+#include "libc/function.h"
+#include "cpu/ports.h"
+#include "cpu/isr.h"
+#include "drivers/screen.h"
+#include "libc/stddef.h"
+#include "libc/memory.h"
+#include "libc/endian.h"
+#include "libc/ctype.h"
 
 #define BACKSPACE 0x0E
 #define ENTER 0x1C
@@ -64,10 +66,13 @@ static void keyboard_callback(registers_t *regs)
 	else if (scancode == LSHIFT);
 	else
 	{
-		if (key_buffer[256] != '\0') { key_buffer_overflow = (char *)kmalloc(2000-265); }
+		if (sc_ascii_lower[(int)scancode] == '?' || sc_ascii_lower[(int)scancode] == '\0') return;
+		if (key_buffer[256] != '\0') { key_buffer_overflow = (char *)kmalloc(2048-256); }
 		if ((async_key_states[LSHIFT] && !capslock) || (capslock && !async_key_states[LSHIFT]))
 		{
 			char letter = sc_ascii_upper[(int)scancode];
+			if (capslock && isalpha(letter)) letter = sc_ascii_lower[(int)scancode] + 26;
+			else letter = sc_ascii_lower[(int)scancode];
 			char str[2] = { letter, '\0' };
 			append(key_buffer, letter);
 			kprint(str);
@@ -89,12 +94,14 @@ bool get_async_key_state(uint32_t k)
 	else                    return async_key_states[k];
 }
 
-void init_keyboard()
+int init_keyboard()
 {
 	register_interrupt_handler(IRQ1, keyboard_callback);
 	for (uint64_t i = 0; i > sizeof(async_key_states)/sizeof(bool); i++)
 	{
 		async_key_states[i] = false;
 	}
+	
+	return 0;
 }
 

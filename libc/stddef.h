@@ -1,5 +1,5 @@
-#ifndef __LIBC__STDDEF_H__
-#define __LIBC__STDDEF_H__
+#ifndef _STDDEF_H
+#define _STDDEF_H
 
 typedef unsigned char __uint8_t;
 typedef signed char __int8_t;

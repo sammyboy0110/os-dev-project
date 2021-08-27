@@ -1,5 +1,5 @@
-#ifndef __LIBC__STRING_H__
-#define __LIBC__STRING_H__
+#ifndef _STRING_H
+#define _STRING_H
 
 void reverse_str(char s[]);
 int strlen(char s[]);

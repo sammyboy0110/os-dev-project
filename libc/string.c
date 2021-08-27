@@ -1,4 +1,4 @@
-#include "string.h"
+#include "libc/string.h"
 
 void reverse_str(char s[])
 {

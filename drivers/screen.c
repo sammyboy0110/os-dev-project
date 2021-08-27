@@ -1,8 +1,9 @@
-#include "screen.h"
-#include "../cpu/ports.h"
-#include "../kernel/util.h"
-#include "../libc/string.h"
-#include "../libc/mem.h"
+#include "drivers/screen.h"
+#include "cpu/ports.h"
+#include "kernel/util.h"
+#include "libc/string.h"
+#include "libc/memory.h"
+#include "drivers/serial.h"
 
 int get_cursor_offset();
 void set_cursor_offset(int offset);
@@ -33,9 +34,90 @@ void kprint_at(char* message, int col, int row)
 	}
 }
 
+void kwarn_at(char* message, int col, int row)
+{
+	int offset;
+	if (col >=0 && row >= 0)
+		offset = get_offset(col, row);
+	else
+	{
+		offset = get_cursor_offset();
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+	
+	int i = 0;
+	while (message[i] != 0x00)
+	{
+		offset = print_char(message[i++], col, row, YELLOW_ON_BLACK);
+
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+}
+
+void kerr_at(char* message, int col, int row)
+{
+	int offset;
+	if (col >=0 && row >= 0)
+		offset = get_offset(col, row);
+	else
+	{
+		offset = get_cursor_offset();
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+	
+	int i = 0;
+	while (message[i] != 0x00)
+	{
+		offset = print_char(message[i++], col, row, RED_ON_BLACK);
+
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+}
+
+void kcrit_at(char* message, int col, int row)
+{
+	int offset;
+	if (col >=0 && row >= 0)
+		offset = get_offset(col, row);
+	else
+	{
+		offset = get_cursor_offset();
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+	
+	int i = 0;
+	while (message[i] != 0x00)
+	{
+		offset = print_char(message[i++], col, row, WHITE_ON_RED);
+
+		row = get_offset_row(offset);
+		col = get_offset_col(offset);
+	}
+}
+
 void kprint(char* message)
 {
 	kprint_at(message, -1, -1);
+}
+
+void kwarn(char* message)
+{
+	kwarn_at(message, -1, -1);
+}
+
+void kerr(char* message)
+{
+	kerr_at(message, -1, -1);
+}
+
+void kcrit(char* message)
+{
+	kcrit_at(message, -1, -1);
 }
 
 void kprint_backspace()
@@ -43,11 +125,10 @@ void kprint_backspace()
 	int offset = get_cursor_offset()-2;
 	int row = get_offset_row(offset);
 	int col = get_offset_col(offset);
-//	if (!(col <= 1))
-//	{
-		print_char(' ', col, row, WHITE_ON_BLACK);
-		set_cursor_offset(offset);
-//	}
+	port_byte_out(COM1, '\b');
+	print_char(' ', col, row, WHITE_ON_BLACK);
+	port_byte_out(COM1, '\b');
+	set_cursor_offset(offset);
 }
 
 int print_char(char c, int col, int row, char attr) {
@@ -67,10 +148,20 @@ int print_char(char c, int col, int row, char attr) {
 	if (c == '\n') {
 		row = get_offset_row(offset);
 		offset = get_offset(0, row+1);
+		
+		if (serial_is_initialized())
+		{
+			port_byte_out(COM1, '\r');
+			port_byte_out(COM1, '\n');
+		}
 	} else {
 		vidmem[offset] = c;
 		vidmem[offset+1] = attr;
 		offset += 2;
+		if (serial_is_initialized())
+		{
+			port_byte_out(COM1, c);
+		}
 	}
 
 	if (offset >= MAX_ROWS * MAX_COLS * 2)

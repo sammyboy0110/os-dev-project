@@ -1,9 +1,9 @@
-#include "timer.h"
-#include "../drivers/screen.h"
-#include "ports.h"
-#include "../kernel/util.h"
-#include "isr.h"
-#include "../libc/function.h"
+#include "cpu/timer.h"
+#include "drivers/screen.h"
+#include "cpu/ports.h"
+#include "kernel/util.h"
+#include "cpu/isr.h"
+#include "libc/function.h"
 
 unsigned tick =0;
 

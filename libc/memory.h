@@ -1,5 +1,5 @@
-#ifndef __LIBC__MEM_H__
-#define __LIBC__MEM_H__
+#ifndef _MEMORY_H
+#define _MEMORY_H
 
 #include <libc/stddef.h>
 

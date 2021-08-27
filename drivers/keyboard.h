@@ -65,7 +65,7 @@ enum keycode
 	KEY_CAPSLOCK = 58
 };
 
-void init_keyboard();
+int init_keyboard();
 
 bool get_async_key_state(uint32_t k);
 

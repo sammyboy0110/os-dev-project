@@ -1,6 +1,6 @@
-#include "mem.h"
-#include "function.h"
-#include "stddef.h"
+#include "libc/memory.h"
+#include "libc/function.h"
+#include "libc/stddef.h"
 
 void bcopy(const void *src, void *dest, unsigned long len)
 {
